@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateProductDto {
-  @ApiProperty({ example: 'product name', required:true })
+  @ApiProperty({ example: 'product name' })
   name: string;
 
   @ApiProperty()
@@ -12,5 +12,4 @@ export class CreateProductDto {
 
   @ApiProperty({ required: false })
   salePrice?: number;
-
 }

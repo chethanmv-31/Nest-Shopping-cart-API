@@ -1,67 +1,79 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Request } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserService } from 'src/auth/user/user.service';
-import { ProductService } from 'src/product/product.service';
-
-import { Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
+import { Like, Repository } from 'typeorm';
+import { UserEntity } from 'src/auth/entities/user.entity';
+import { UserService } from 'src/auth/user/user.service';
+import { ProductService } from 'src/product/product.service';
+import { Product } from 'src/product/entities/product.entity';
+
 
 @Injectable()
 export class OrderService {
+
   constructor(
-    @InjectRepository(Order) private orderRepository:Repository<Order>,
-    private userService:UserService,private productService:ProductService
-   
-  ){
+    @InjectRepository(Order) private orderRepository: Repository<Order>,
+    private userService: UserService,
+    private productService: ProductService
+  ) { }
 
-  }
- async create(userId:string,productId:number,createOrderDto: CreateOrderDto) {
-    const user =await this.userService.findById(userId);
-    console.log("user----------------", user)
-    const product = await this.productService.findOne(productId)
-    const{amount,shippingDate,status}=createOrderDto;
 
-    return this.orderRepository.save({
-      orderAmount:amount,
-      shippingDate:shippingDate,
-      orderStatus:status,
-      userId:user,
-      productId:product,
-
-      
-    })
-  }
-
-  findAll() {
-    return this.orderRepository.find();
+  async create(uId: string, pId: number, createOrderDto: CreateOrderDto) {
+    try {
+      const user = await this.userService.findById(uId);
+      const product = await this.productService.findOne(pId);
+      // console.log("service product", product.productId);
+      //console.log("service User", user);
+      const { amount, OSDate, qty } = createOrderDto;
+      return this.orderRepository.save({
+        orderAmount: amount,
+        orderShippingDate: OSDate,
+        orderQty: qty,
+        userId: user,
+        productId: product
+      });
+    } catch (err) {
+      console.log(err);
+    }
   }
 
-  async findOne(id: number) {
-    return this.orderRepository.findOne(id).
-    then((data)=>{
-      if(!data) throw new NotFoundException();
-      return data;
-    })
+  async findAll(userId: string,) {
+    try {
+      const user = await this.userService.findById(userId);
+      return this.orderRepository.find({ where: { userId: user } });
+    } catch (err) {
+      console.log(err)
+    }
   }
+
+  findOne(uId: number) {
+    return this.orderRepository.findOne(uId)
+      .then((data) => {
+        console.log(data);
+        if (!data) throw new NotFoundException();
+        return data;
+      }).catch(err => console.log(err))
+  }
+
 
   async update(id: number, updateOrderDto: UpdateOrderDto) {
-    
-    
-    return this.orderRepository.update({orderId:id},{
-    
-      orderAmount:updateOrderDto.amount,
-      shippingDate:updateOrderDto.shippingDate,
-      orderStatus:updateOrderDto.status,
-      
-    }).then((data)=>{
-      if(!data) throw new NotFoundException();
-      return data;
-    })
+    try {
+      return this.orderRepository
+        .update(id, {
+          orderAmount: updateOrderDto.amount,
+          orderShippingDate: updateOrderDto.OSDate,
+          orderQty: updateOrderDto.qty,
+        })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   remove(id: number) {
-    return this.orderRepository.delete({orderId:id});
+    return this.orderRepository.delete(id);
   }
 }
+
+
