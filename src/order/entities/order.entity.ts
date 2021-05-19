@@ -10,7 +10,7 @@ export class Order {
     @PrimaryGeneratedColumn()
     orderId: number;
 
-    @Column({ nullable: false })
+    @Column({ nullable: true })
     orderAmount: number;
 
     @Column({ nullable: false })

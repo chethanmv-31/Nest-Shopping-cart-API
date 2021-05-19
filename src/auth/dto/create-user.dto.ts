@@ -17,5 +17,5 @@ export class CreateUserDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  profileImage?:string;
+  profileImage?:any;
 }

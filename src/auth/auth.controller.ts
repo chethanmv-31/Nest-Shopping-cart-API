@@ -8,6 +8,8 @@ import {
   Request,
   UseInterceptors,
   UploadedFile,
+  Param,
+  Res,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -15,16 +17,17 @@ import {
   ApiBadRequestResponse,
   ApiOkResponse,
 } from '@nestjs/swagger';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt.guard';
 import { UserService } from './user/user.service';
-import {diskStorage } from "multer";
-import {FileInterceptor } from "@nestjs/platform-express";
+import { diskStorage } from "multer";
+import { FileInterceptor } from "@nestjs/platform-express";
 import { UserEntity } from './entities/user.entity';
 import { v4 as uuidv4 } from "uuid";
+import { join } from 'node:path';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -59,27 +62,31 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post("upload")
+  @Post("fileupload")
   @UseInterceptors(
-      FileInterceptor("image", {
-          storage: diskStorage({
-              destination: "./upload/profileImage",
-              filename: (req: any, file: any, callback: any) => {
-                  return callback(null, `${uuidv4()}${file.originalname}`);
-              },
-          }),
-      })
+    FileInterceptor("image", {
+      storage: diskStorage({
+        destination: "./upload/profileImage",
+        filename: (req: any, file: any, callback: any) => {
+          return callback(null, `${uuidv4()}${file.originalname}`);
+        },
+      }),
+    })
   )
-  
- async uploadFile(@UploadedFile() file: Express.Multer.File, @Request() req: any) {
-      const user: UserEntity = req.user.user;
-      console.log(user);
 
-      console.log(file);
+  async uploadFile(@UploadedFile() file: Express.Multer.File, @Request() req: any) {
+    const user: UserEntity = req.user.user;
+    console.log(user);
 
-    return of( { imagePath: file.filename } );
+    console.log(file);
+
+    return of({ imagePath: file.filename });
   }
 
-
+  // @UseGuards(JwtAuthGuard)
+  // @Get('image/:imagename')
+  // findProfileImage(@Param('imagename') imagename, @Res() res): Observable<Object> {
+  //   return of(res.sendFile(join(process.cwd(), 'uploads/profileimages/' + imagename)));
+  // }
 
 }
